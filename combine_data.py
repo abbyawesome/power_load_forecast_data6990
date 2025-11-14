@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import holidays
+from datetime import timedelta
 
 
 def read_power(filepath: str) -> pd.DataFrame:
@@ -102,13 +103,19 @@ def add_dates(old_df: pd.DataFrame) -> pd.DataFrame:
 
     df = old_df.copy()
 
+    # find localized time for daylight savings indicator - using central, since 2/3 cities in central
+    df['local_time'] = df['date'].dt.tz_convert('US/Central')
+
+    # add daylight savings time indicator
+    df['daylight_savings'] = df['local_time'].apply(lambda x: False if x.dst() == timedelta(0) else True)
+
     # get date information
-    df['holiday'] = df['date'].dt.date.isin(usa_holidays)
-    df['is_weekend'] = df['date'].dt.weekday >= 5  # 5 is Saturday, 6 is Sunday
-    df['year'] = df['date'].dt.year
-    df['month'] = df['date'].dt.month
-    df['day_percent'] = df['date'].dt.day / df['date'].dt.daysinmonth
-    df['hour'] = df['date'].dt.hour
+    df['holiday'] = df['local_time'].dt.date.isin(usa_holidays)
+    df['is_weekend'] = df['local_time'].dt.weekday >= 5  # 5 is Saturday, 6 is Sunday
+    df['year'] = df['local_time'].dt.year
+    df['month'] = df['local_time'].dt.month
+    df['day_percent'] = df['local_time'].dt.day / df['local_time'].dt.daysinmonth
+    df['hour'] = df['local_time'].dt.hour
 
     # get season info
     df['season'] = np.select(
@@ -128,6 +135,12 @@ def add_dates(old_df: pd.DataFrame) -> pd.DataFrame:
 
     # remove rows with missing values from lag
     df = df.dropna(subset=['power_1day'])
+
+    # drop dates - have them encoded, and scikit-learn doesn't play nice with datetime
+    df = df.drop(columns=['date', 'local_time'])
+
+    # reset index to be pretty
+    df.reset_index(inplace=True, drop=True)
 
     return df
 

@@ -8,4 +8,4 @@ Data is from 1/1/2023 to 12/31/2024 in the TVA region.
 Data is from the EIA (https://www.eia.gov/opendata/) and pulled using the API
 
 ## Weather Data
-Weather data is from NOAA (https://www.ncei.noaa.gov/access/search/data-search/global-hourly) and from _____ cities. 
+Weather data is from Open-Meteo (https://open-meteo.com/en/docs) and from Nashville, TN, Memphis, TN, and Knoxville, TN
